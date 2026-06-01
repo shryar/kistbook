@@ -1,0 +1,297 @@
+{
+  "info": {
+    "_postman_id": "kistbook-poc-001",
+    "name": "KistBook POC",
+    "description": "KistBook Installment Reminder Engine — all 8 REST endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8000", "type": "string"},
+    {"key": "token", "value": "", "type": "string"},
+    {"key": "retailer_id", "value": "", "type": "string"},
+    {"key": "customer_id", "value": "", "type": "string"}
+  ],
+  "item": [
+    {
+      "name": "First Run",
+      "description": "Run these in order for a complete POC demo.",
+      "item": [
+        {
+          "name": "1. Create Retailer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('retailer_id', json.id);",
+                  "  pm.test('Retailer created', () => pm.expect(json.id).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/retailers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ShopHive\",\n  \"whatsapp_number\": \"+923001234567\",\n  \"manager_phone\": \"+923007654321\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Import CSV",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{base_url}}/retailers/{{retailer_id}}/import-csv",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload your installment book CSV"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Trigger Scan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Scan returned tasks', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.tasks_enqueued).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/admin/trigger-scan",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"retailer_id\": \"{{retailer_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4. Get Reminder Logs",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/retailers/{{retailer_id}}/reminder-logs?page=1&page_size=50",
+              "host": ["{{base_url}}"],
+              "path": ["retailers", "{{retailer_id}}", "reminder-logs"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "page_size", "value": "50"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Retailers",
+      "item": [
+        {
+          "name": "Create Retailer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/retailers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ShopHive\",\n  \"whatsapp_number\": \"+923001234567\",\n  \"manager_phone\": \"+923007654321\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Import CSV",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{base_url}}/retailers/{{retailer_id}}/import-csv",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{"key": "file", "type": "file", "src": ""}]
+            }
+          }
+        },
+        {
+          "name": "Get Config",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": "{{base_url}}/retailers/{{retailer_id}}/config"
+          }
+        },
+        {
+          "name": "Update Config",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/retailers/{{retailer_id}}/config",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tone\": \"formal\",\n  \"branch_c_enabled\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "List Customers",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/retailers/{{retailer_id}}/customers?page=1&page_size=50",
+              "host": ["{{base_url}}"],
+              "path": ["retailers", "{{retailer_id}}", "customers"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "page_size", "value": "50"},
+                {"key": "paused", "value": "false", "disabled": true},
+                {"key": "completed", "value": "false", "disabled": true}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Pause Customer Sequence",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/retailers/{{retailer_id}}/customers/{{customer_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sequence_paused\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs",
+      "item": [
+        {
+          "name": "Get Reminder Logs",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/retailers/{{retailer_id}}/reminder-logs?page=1&page_size=50",
+              "host": ["{{base_url}}"],
+              "path": ["retailers", "{{retailer_id}}", "reminder-logs"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "page_size", "value": "50"},
+                {"key": "direction", "value": "outbound", "disabled": true},
+                {"key": "status", "value": "sent", "disabled": true}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Simulate PAID Reply (inbound)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "X-Hub-Signature-256", "value": "sha256=<compute-with-secret>", "description": "HMAC-SHA256 of request body using WETARSEEL_WEBHOOK_SECRET"}
+            ],
+            "url": "{{base_url}}/webhooks/whatsapp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"messages\": [{\n          \"from\": \"+923001234567\",\n          \"id\": \"wamid.test001\",\n          \"timestamp\": \"1748735456\",\n          \"text\": {\"body\": \"paid kar diya\"},\n          \"type\": \"text\"\n        }]\n      }\n    }]\n  }]\n}"
+            }
+          }
+        },
+        {
+          "name": "Simulate Delivery Receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "X-Hub-Signature-256", "value": "sha256=<compute-with-secret>"}
+            ],
+            "url": "{{base_url}}/webhooks/whatsapp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"object\": \"whatsapp_business_account\",\n  \"entry\": [{\n    \"changes\": [{\n      \"value\": {\n        \"statuses\": [{\n          \"id\": \"wamid.xxx\",\n          \"status\": \"delivered\",\n          \"timestamp\": \"1748735123\"\n        }]\n      }\n    }]\n  }]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Trigger Scan (all retailers)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/admin/trigger-scan",
+            "body": {"mode": "raw", "raw": "{}"}
+          }
+        },
+        {
+          "name": "Trigger Scan (specific retailer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": "{{base_url}}/admin/trigger-scan",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"retailer_id\": \"{{retailer_id}}\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

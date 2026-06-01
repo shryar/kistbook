@@ -1,4 +1,4 @@
-# KishtBook — Product Requirements Document
+# KistBook — Product Requirements Document
 **Version 2.0 | June 2026 | Confidential**
 
 ---
@@ -17,9 +17,9 @@
 
 ## Executive Summary
 
-KishtBook is a B2B SaaS platform that serves as the **credit collections OS for mid-size ecommerce retailers in Pakistan** — and eventually across South Asia and MENA. It replaces the WhatsApp-group-and-gut-feel system that governs informal installment credit today with a structured, automated reminder engine, a customer credit ledger, and — once sufficient repayment data exists — an AI-driven network credit score built from real behaviour.
+KistBook is a B2B SaaS platform that serves as the **credit collections OS for mid-size ecommerce retailers in Pakistan** — and eventually across South Asia and MENA. It replaces the WhatsApp-group-and-gut-feel system that governs informal installment credit today with a structured, automated reminder engine, a customer credit ledger, and — once sufficient repayment data exists — an AI-driven network credit score built from real behaviour.
 
-**The founding insight:** Pakistan's installment credit market is already massive and deeply functional. It runs on trust, paper, and personal relationships. The retailer's credit instincts are largely correct (true default rate is near zero). What breaks down is the follow-up system. Payments slip not because customers won't pay — but because nobody is consistently, professionally nudging them. KishtBook fixes the follow-up, not the credit decision.
+**The founding insight:** Pakistan's installment credit market is already massive and deeply functional. It runs on trust, paper, and personal relationships. The retailer's credit instincts are largely correct (true default rate is near zero). What breaks down is the follow-up system. Payments slip not because customers won't pay — but because nobody is consistently, professionally nudging them. KistBook fixes the follow-up, not the credit decision.
 
 **Target customer (v1):** Mid-size ecommerce retailers in Pakistan (10–50 staff, tech-savvy, selling electronics or high-ticket goods on credit, ~100–2,000 installment customers, avg ticket PKR 50K–150K).
 
@@ -44,7 +44,7 @@ Validated from ShopHive's own 4-year portfolio:
 
 **This is not a credit risk problem. It is a friction and forgetting problem.**
 
-Customers who've paid 4 of 6 installments are not defaulters — they are drifters. They can pay. They intend to pay. They just need a consistent, professional, escalating nudge. The current WhatsApp-based system delivers inconsistent nudges at best and none at worst. KishtBook automates the nudge.
+Customers who've paid 4 of 6 installments are not defaulters — they are drifters. They can pay. They intend to pay. They just need a consistent, professional, escalating nudge. The current WhatsApp-based system delivers inconsistent nudges at best and none at worst. KistBook automates the nudge.
 
 ### Why this problem is unsolved
 
@@ -74,7 +74,7 @@ The specific gap:
 ### Regional (3–5 year horizon)
 - Bangladesh, Egypt, Nigeria share identical market dynamics: large informal credit ecosystems, low credit card penetration, high mobile penetration, rapidly digitising retail
 - Indonesia's BNPL market projected to reach $13.59B by 2030 — collections infrastructure layer still nascent
-- MENA's consumer lending market is $500B — ClearGrid (Dubai) raised $10M in 2025 purely to automate collections for banks and BNPL providers. KishtBook is the SME-retail version of this thesis, at 1/10th the complexity
+- MENA's consumer lending market is $500B — ClearGrid (Dubai) raised $10M in 2025 purely to automate collections for banks and BNPL providers. KistBook is the SME-retail version of this thesis, at 1/10th the complexity
 
 ### Comparable companies
 | Company | Market | What they do | Funding |
@@ -85,13 +85,13 @@ The specific gap:
 | UR QistPro | Pakistan | Basic ledger + one-way WhatsApp reminders | Bootstrapped |
 | Moneypex | Pakistan | Ledger + guarantor tracking, no reminders | Bootstrapped |
 
-**KishtBook's white space:** Collections intelligence for retailer-run informal credit — a category none of the above serve.
+**KistBook's white space:** Collections intelligence for retailer-run informal credit — a category none of the above serve.
 
 ---
 
 ## Product Vision
 
-> "KishtBook is the collections backbone of Pakistan's informal retail economy — the system that makes sure every rupee owed gets paid, without a single manual WhatsApp from the retailer."
+> "KistBook is the collections backbone of Pakistan's informal retail economy — the system that makes sure every rupee owed gets paid, without a single manual WhatsApp from the retailer."
 
 ---
 
@@ -253,7 +253,7 @@ When multiple retailers are on the platform, repayment behaviour is pooled (with
 
 **Critical reframe from v1.0:** The network score's primary value is not catching "bad" borrowers — your true default rate shows those are vanishingly rare. The real value is **drift detection**: a customer who has gone unresponsive across 3 retailers simultaneously in the past 60 days is almost certainly a relocation or hardship case. Knowing this early — before sending a recovery agent on a wasted visit — is the actionable insight.
 
-Use case: "This CNIC has active accounts at 2 other KishtBook retailers and has missed the last 3 reminders at both. Likely relocated. Recommend: guarantor contact before field visit."
+Use case: "This CNIC has active accounts at 2 other KistBook retailers and has missed the last 3 reminders at both. Likely relocated. Recommend: guarantor contact before field visit."
 
 **Data governance:**
 - CNIC is the matching key (not name — too many collisions in Pakistani data)
@@ -271,7 +271,7 @@ Use case: "This CNIC has active accounts at 2 other KishtBook retailers and has 
 | Intellicon | Enterprise, PKR | 2–3 days | Yes | Yes | Consider at scale |
 | Interakt (India) | USD | 2–7 days | Limited | No | Avoid for MVP |
 
-**Setup requirements for KishtBook (applies to any BSP):**
+**Setup requirements for KistBook (applies to any BSP):**
 - SECP business registration
 - NTN certificate
 - Company website (ShopHive.com qualifies)
@@ -323,13 +323,13 @@ Deliverables:
 - Monthly transaction fee revenue: PKR 2M+
 
 ### Phase 3 — Network and Platform (Months 13–24)
-**Goal:** Build the network effect that makes KishtBook irreplaceable.
+**Goal:** Build the network effect that makes KistBook irreplaceable.
 
 Deliverables:
 - Network KishtScore (Phase 2B) — cross-retailer drift detection
 - KishtScore API for BNPL providers and NBFCs (new revenue stream)
 - eCommerce platform integrations (WooCommerce, Shopify Pakistan)
-- Embedded receivables financing (partner NBFC advances against KishtBook-verified installment book)
+- Embedded receivables financing (partner NBFC advances against KistBook-verified installment book)
 - International expansion: Bangladesh, then Egypt
 
 ---
@@ -337,9 +337,9 @@ Deliverables:
 ## Business Model
 
 ### Core: Transaction fee on collections
-- KishtBook takes **1.5–2.5% of each installment collected through the platform**
-- Incentive alignment: KishtBook only earns when the retailer recovers money
-- Fee is only charged on installments where a KishtBook-sent reminder or workflow was active — retailers are not charged for installments customers pay spontaneously before any reminder fires
+- KistBook takes **1.5–2.5% of each installment collected through the platform**
+- Incentive alignment: KistBook only earns when the retailer recovers money
+- Fee is only charged on installments where a KistBook-sent reminder or workflow was active — retailers are not charged for installments customers pay spontaneously before any reminder fires
 
 ### Secondary (Phase 2+): KishtScore API
 - Charge fintechs, BNPL providers, NBFCs for network credit score access via API
@@ -348,7 +348,7 @@ Deliverables:
 
 ### Tertiary (Phase 3): Embedded financing spread
 - Advance retailers against their verified installment receivables
-- KishtBook's repayment data makes underwriting dramatically cheaper than any bank
+- KistBook's repayment data makes underwriting dramatically cheaper than any bank
 - Revenue: spread between cost of capital and advance rate
 
 ### Unit economics (illustrative, per retailer)
@@ -359,7 +359,7 @@ Deliverables:
 | Average ticket | PKR 100,000 |
 | Average plan duration | 10 months |
 | Monthly collections per retailer | ~PKR 2,500,000 |
-| KishtBook fee at 2% | **PKR 50,000/month** |
+| KistBook fee at 2% | **PKR 50,000/month** |
 
 **Portfolio:**
 
@@ -369,7 +369,7 @@ Deliverables:
 | 100 | PKR 5M (~$18K USD) |
 | 500 | PKR 25M (~$90K USD) |
 
-At 500 retailers KishtBook is generating ~$1M+ ARR in transaction fees alone, before the KishtScore API revenue layer.
+At 500 retailers KistBook is generating ~$1M+ ARR in transaction fees alone, before the KishtScore API revenue layer.
 
 ---
 
@@ -377,12 +377,12 @@ At 500 retailers KishtBook is generating ~$1M+ ARR in transaction fees alone, be
 
 ### Beachhead: Lahore electronics corridor
 ShopHive's CEO network is the unfair advantage. The initial GTM:
-1. ShopHive uses KishtBook first (dogfooding) — generates the case study with real DSO and recovery numbers
+1. ShopHive uses KistBook first (dogfooding) — generates the case study with real DSO and recovery numbers
 2. CEO personally onboards 5–10 adjacent Lahore electronics retailers in Months 1–2
 3. Each retailer's measurable improvement becomes the sales asset for the next conversation
 
 ### The demo that sells itself
-Show a retailer their current reality: a WhatsApp thread with 200 customers, no structure, payments going untracked. Then show KishtBook's dashboard with every account, status, last reminder, and next action clearly visible. The contrast closes deals without a pitch.
+Show a retailer their current reality: a WhatsApp thread with 200 customers, no structure, payments going untracked. Then show KistBook's dashboard with every account, status, last reminder, and next action clearly visible. The contrast closes deals without a pitch.
 
 ### Sales motion
 - Direct sales, founder-led in Phase 1
@@ -391,7 +391,7 @@ Show a retailer their current reality: a WhatsApp thread with 200 customers, no 
 - Onboarding SLA: retailer is live with first automated reminders running within 48 hours of signup
 
 ### Retention moat
-After 12 months, a retailer's entire customer payment history, reminder response patterns, and collections workflow live in KishtBook. Switching cost is near-infinite — they lose their data, their KishtScores, and their automation. Churn risk drops precipitously after Month 6.
+After 12 months, a retailer's entire customer payment history, reminder response patterns, and collections workflow live in KistBook. Switching cost is near-infinite — they lose their data, their KishtScores, and their automation. Churn risk drops precipitously after Month 6.
 
 ---
 
@@ -437,7 +437,7 @@ The reminder engine is the most critical system in the product. It must:
 
 ## Regulatory Considerations
 
-- **KishtBook is not a lender.** It is a SaaS collections tool for retailers extending their own credit. This keeps KishtBook outside SECP NBFC licensing at launch — critical.
+- **KistBook is not a lender.** It is a SaaS collections tool for retailers extending their own credit. This keeps KistBook outside SECP NBFC licensing at launch — critical.
 - **KishtScore is a proprietary business intelligence score**, not a formal credit bureau report. Formal credit bureau registration (SECP-regulated) is a Phase 3 option, not a requirement.
 - **Data sharing (Phase 2):** Pakistan's Personal Data Protection Act (2023) applies. Customer CNIC data must be encrypted at rest and in transit. Network score data sharing requires documented retailer consent and customer disclosure at point of credit application.
 - **WhatsApp compliance:** All message templates must include an opt-out mechanism. Retailer must have prior relationship with the customer (which they do — by definition, they extended credit to them).
@@ -459,7 +459,7 @@ The reminder engine is the most critical system in the product. It must:
 ## Success Metrics (North Star KPIs)
 
 ### Retailer outcomes
-- **DSO reduction:** Days Sales Outstanding vs. pre-KishtBook baseline (target: >30% reduction in 90 days)
+- **DSO reduction:** Days Sales Outstanding vs. pre-KistBook baseline (target: >30% reduction in 90 days)
 - **Recovery rate:** % of late accounts resolved without field visit (target: >60%)
 - **Reminder conversion:** % of customers who pay within 48 hours of first automated reminder
 
@@ -485,7 +485,7 @@ The reminder engine is the most critical system in the product. It must:
 ```
                         HIGH INTELLIGENCE
                                |
-             ClearGrid          |          KishtBook ←
+             ClearGrid          |          KistBook ←
              (banks/BNPL,       |          (SME retail,
               MENA, $10M)       |           Pakistan)
                                |
@@ -499,7 +499,7 @@ ENTERPRISE                     |
                         LOW INTELLIGENCE
 ```
 
-KishtBook occupies an uncontested quadrant: **SME-focused, high intelligence**. Enterprise intelligence tools (ClearGrid, Credgenics) are too expensive and complex for Pakistani SME retailers. Existing Pakistani tools are ledgers, not collections engines. KishtBook is the gap.
+KistBook occupies an uncontested quadrant: **SME-focused, high intelligence**. Enterprise intelligence tools (ClearGrid, Credgenics) are too expensive and complex for Pakistani SME retailers. Existing Pakistani tools are ledgers, not collections engines. KistBook is the gap.
 
 ---
 

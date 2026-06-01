@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Logs
+*.log
+logs/
+
+# Database / Alembic (contains connection strings)
+alembic.ini
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Spec Kit & Claude Code (planning artifacts — not production code)
+.claude/
+specs/
+.specify/

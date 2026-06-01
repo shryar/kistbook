@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KistBook — POC Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; color: #1a202c; }
+    header { background: #1a73e8; color: #fff; padding: 16px 32px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header span { font-size: 0.8rem; background: rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 8px; }
+    .container { max-width: 860px; margin: 32px auto; padding: 0 16px; }
+    .steps { display: grid; gap: 20px; }
+    .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 1rem; font-weight: 600; color: #1a73e8; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .step-num { background: #1a73e8; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+    .card p { font-size: 0.875rem; color: #718096; margin-bottom: 16px; }
+    label { display: block; font-size: 0.8rem; font-weight: 500; margin-bottom: 4px; color: #4a5568; }
+    input[type=text], input[type=password], input[type=file] { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; margin-bottom: 12px; }
+    button { background: #1a73e8; color: #fff; border: none; border-radius: 6px; padding: 9px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer; }
+    button:hover { background: #1557b0; }
+    button:disabled { background: #a0aec0; cursor: not-allowed; }
+    .result { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 0.82rem; white-space: pre-wrap; font-family: monospace; }
+    .ok { background: #f0fff4; border: 1px solid #9ae6b4; color: #276749; }
+    .err { background: #fff5f5; border: 1px solid #feb2b2; color: #9b2c2c; }
+    .info { background: #ebf8ff; border: 1px solid #90cdf4; color: #2b6cb0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 12px; }
+    th { background: #edf2f7; text-align: left; padding: 6px 10px; font-weight: 600; }
+    td { padding: 6px 10px; border-bottom: 1px solid #f0f0f0; }
+    .pagination { display: flex; gap: 8px; margin-top: 10px; align-items: center; font-size: 0.8rem; }
+    .hidden { display: none; }
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 600; }
+    .status-sent { background: #e6fffa; color: #2c7a7b; }
+    .status-delivered { background: #f0fff4; color: #276749; }
+    .status-failed { background: #fff5f5; color: #9b2c2c; }
+    .status-skipped_no_guarantor { background: #fffbeb; color: #975a16; }
+    .status-replied { background: #ebf8ff; color: #2b6cb0; }
+    #retailer-badge { font-size: 0.75rem; background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>KistBook</h1>
+  <span>POC Demo</span>
+  <span id="retailer-badge" class="hidden">Retailer: —</span>
+</header>
+
+<div class="container">
+  <div class="steps">
+
+    <!-- STEP 1: Auth token -->
+    <div class="card">
+      <h2><span class="step-num">0</span> API Token</h2>
+      <p>Paste your JWT bearer token (generate with <code>python -c "from kistbook.core.security import create_access_token; print(create_access_token({'sub':'demo'}))"</code>)</p>
+      <label for="token">Bearer Token</label>
+      <input type="password" id="token" placeholder="eyJ..." />
+    </div>
+
+    <!-- STEP 1: Create Retailer -->
+    <div class="card">
+      <h2><span class="step-num">1</span> Create Retailer</h2>
+      <p>Register ShopHive as a retailer. The returned ID is saved automatically for subsequent steps.</p>
+      <label>Retailer Name</label>
+      <input type="text" id="retailer-name" value="ShopHive" />
+      <label>WhatsApp Number (E.164)</label>
+      <input type="text" id="retailer-wa" value="+923001234567" />
+      <label>Ops Manager Phone (E.164)</label>
+      <input type="text" id="manager-phone" value="+923007654321" />
+      <button onclick="createRetailer()">Create Retailer →</button>
+      <div id="retailer-result"></div>
+    </div>
+
+    <!-- STEP 2: Import CSV -->
+    <div class="card">
+      <h2><span class="step-num">2</span> Upload Installment Book CSV</h2>
+      <p>Upload a CSV with columns: <code>customer_name, cnic, phone, guarantor_name, guarantor_phone, installment_amount, due_day_of_month, total_installments, installments_paid, last_payment_date</code></p>
+      <label>CSV File</label>
+      <input type="file" id="csv-file" accept=".csv" />
+      <button onclick="importCsv()">Import CSV →</button>
+      <div id="csv-result"></div>
+    </div>
+
+    <!-- STEP 3: Trigger Scan -->
+    <div class="card">
+      <h2><span class="step-num">3</span> Trigger Daily Scan</h2>
+      <p>Runs the reminder engine scan immediately. Only available in development environment.</p>
+      <button onclick="triggerScan()">Run Scan →</button>
+      <div id="scan-result"></div>
+    </div>
+
+    <!-- STEP 4: View Logs -->
+    <div class="card">
+      <h2><span class="step-num">4</span> View Reminder Logs</h2>
+      <p>Audit trail of all outbound reminders and inbound replies.</p>
+      <button onclick="loadLogs(1)">Load Logs →</button>
+      <div id="logs-result"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const BASE = '';
+  let retailerId = localStorage.getItem('kistbook_retailer_id') || '';
+  let currentPage = 1;
+
+  function getToken() {
+    return document.getElementById('token').value.trim();
+  }
+
+  function headers() {
+    return {
+      'Authorization': `Bearer ${getToken()}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  function showResult(elId, text, type = 'info') {
+    const el = document.getElementById(elId);
+    el.className = `result ${type}`;
+    el.textContent = text;
+  }
+
+  function updateBadge() {
+    const badge = document.getElementById('retailer-badge');
+    if (retailerId) {
+      badge.textContent = `Retailer ID: ${retailerId.slice(0, 8)}…`;
+      badge.classList.remove('hidden');
+    }
+  }
+
+  async function createRetailer() {
+    const body = {
+      name: document.getElementById('retailer-name').value,
+      whatsapp_number: document.getElementById('retailer-wa').value,
+      manager_phone: document.getElementById('manager-phone').value,
+    };
+    try {
+      const res = await fetch(`${BASE}/retailers`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        retailerId = data.id;
+        localStorage.setItem('kistbook_retailer_id', retailerId);
+        updateBadge();
+        showResult('retailer-result', JSON.stringify(data, null, 2), 'ok');
+      } else {
+        showResult('retailer-result', JSON.stringify(data, null, 2), 'err');
+      }
+    } catch (e) {
+      showResult('retailer-result', `Error: ${e.message}`, 'err');
+    }
+  }
+
+  async function importCsv() {
+    if (!retailerId) { showResult('csv-result', 'Create a retailer first (Step 1).', 'err'); return; }
+    const file = document.getElementById('csv-file').files[0];
+    if (!file) { showResult('csv-result', 'Select a CSV file.', 'err'); return; }
+    const form = new FormData();
+    form.append('file', file);
+    try {
+      const res = await fetch(`${BASE}/retailers/${retailerId}/import-csv`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+        body: form,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showResult('csv-result', `Imported ${data.imported} rows. Errors: ${data.errors.length}`, 'ok');
+      } else {
+        const detail = data.detail || data;
+        showResult('csv-result', JSON.stringify(detail, null, 2), 'err');
+      }
+    } catch (e) {
+      showResult('csv-result', `Error: ${e.message}`, 'err');
+    }
+  }
+
+  async function triggerScan() {
+    if (!retailerId) { showResult('scan-result', 'Create a retailer first (Step 1).', 'err'); return; }
+    try {
+      const res = await fetch(`${BASE}/admin/trigger-scan`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ retailer_id: retailerId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showResult('scan-result', `Tasks enqueued: ${data.tasks_enqueued}\nCustomers scanned: ${data.customers_scanned}\nDuration: ${data.scan_duration_ms}ms`, 'ok');
+      } else {
+        showResult('scan-result', JSON.stringify(data, null, 2), 'err');
+      }
+    } catch (e) {
+      showResult('scan-result', `Error: ${e.message}`, 'err');
+    }
+  }
+
+  async function loadLogs(page = 1) {
+    if (!retailerId) { showResult('logs-result', 'Create a retailer first (Step 1).', 'err'); return; }
+    currentPage = page;
+    try {
+      const res = await fetch(`${BASE}/retailers/${retailerId}/reminder-logs?page=${page}&page_size=20`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (!res.ok) { showResult('logs-result', JSON.stringify(data, null, 2), 'err'); return; }
+
+      const container = document.getElementById('logs-result');
+      if (!data.logs || data.logs.length === 0) {
+        container.className = 'result info';
+        container.textContent = 'No logs yet. Run the scan first.';
+        return;
+      }
+
+      container.className = '';
+      const statusClass = s => `status-badge status-${s}`;
+      const rows = data.logs.map(l => `
+        <tr>
+          <td>${(l.sent_at || '').slice(0, 19).replace('T', ' ')}</td>
+          <td>${l.step}</td>
+          <td>${l.direction}</td>
+          <td>${l.channel}</td>
+          <td><span class="${statusClass(l.status)}">${l.status}</span></td>
+          <td style="font-size:0.72rem;color:#718096">${(l.provider_msg_id || '').slice(0, 20)}</td>
+        </tr>`).join('');
+
+      const totalPages = Math.ceil(data.total / 20);
+      const prevBtn = page > 1 ? `<button onclick="loadLogs(${page - 1})">← Prev</button>` : '';
+      const nextBtn = page < totalPages ? `<button onclick="loadLogs(${page + 1})">Next →</button>` : '';
+
+      container.innerHTML = `
+        <table>
+          <thead><tr><th>Sent At</th><th>Step</th><th>Direction</th><th>Channel</th><th>Status</th><th>Msg ID</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="pagination">${prevBtn} <span>Page ${page} of ${totalPages} (${data.total} total)</span> ${nextBtn}</div>`;
+    } catch (e) {
+      showResult('logs-result', `Error: ${e.message}`, 'err');
+    }
+  }
+
+  updateBadge();
+</script>
+</body>
+</html>
