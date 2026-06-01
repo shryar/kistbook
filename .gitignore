@@ -1,3 +1,6 @@
+#files
+spec.md
+
 # Python
 __pycache__/
 *.py[cod]
@@ -44,3 +47,4 @@ Thumbs.db
 .claude/
 specs/
 .specify/
+
