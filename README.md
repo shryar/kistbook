@@ -1,6 +1,6 @@
 # KistBook — Installment Reminder Engine (POC)
 
-WhatsApp-based automated installment reminder engine for Pakistani retail. Replaces manual follow-up with branched, idempotent reminders dispatched via WeTarseel BSP.
+WhatsApp-based automated installment reminder engine for Pakistani retail. Replaces manual follow-up with branched, idempotent reminders dispatched via the WeTarseel BSP.
 
 ## What It Does
 
@@ -13,167 +13,153 @@ WhatsApp-based automated installment reminder engine for Pakistani retail. Repla
 ## Architecture
 
 ```
-CSV Upload → FastAPI → PostgreSQL
-                ↓
-Celery Beat (daily 06:00 PKT)
-   → scanner.py  →  SendReminderTask (Celery worker)
-                           ↓
-                    WeTarseel BSP → WhatsApp
+CSV Upload ──► FastAPI ──► PostgreSQL
+                  │
+         Celery Beat (daily 06:00 PKT)
+              │
+         scanner.py ──► SendReminderTask (Celery worker)
+                              │
+                       WeTarseel BSP ──► WhatsApp
 
-WhatsApp reply → WeTarseel webhook → FastAPI → reply_handler.py
-                                                    ↓
-                                             pause sequence + alert manager
+WhatsApp reply ──► WeTarseel webhook ──► FastAPI ──► reply_handler.py
+                                                         │
+                                               pause sequence + manager alert
 ```
 
-## Tech Stack
+## Running Locally with Docker
 
-| Layer | Technology |
-|-------|-----------|
-| API | FastAPI (Python 3.11+) |
-| Task queue | Celery 5 + Celery Beat |
-| Database | PostgreSQL 15 (Railway) |
-| Broker / cache | Redis (Railway) |
-| WhatsApp | WeTarseel BSP (Meta Cloud API) |
-| ORM | SQLAlchemy 2.x async |
-| Auth | JWT (python-jose) |
-| Encryption | Fernet (cryptography) |
+### Prerequisites
 
-## Local Development Setup
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
 
-### 1. Prerequisites
+### 1. Create your `.env` file
 
-- Python 3.11+
-- PostgreSQL 15 running locally or via Railway
-- Redis running locally or via Railway
-
-### 2. Install
+Copy the example and fill in your WeTarseel credentials:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+cp .env.example .env
 ```
 
-### 3. Environment Variables
+The only values you **must** change before first run are:
 
-Copy `.env.example` to `.env` and fill in:
+| Variable | How to get it |
+|----------|---------------|
+| `WETARSEEL_API_KEY` | Your WeTarseel dashboard API key |
+| `WETARSEEL_WEBHOOK_SECRET` | Set in your WeTarseel webhook config |
+| `SECRET_KEY` | Any random 32+ character string |
+| `CREDENTIALS_ENC_KEY` | Run: `python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+
+`DATABASE_URL` and `REDIS_URL` are pre-filled in `.env.example` to match the Docker Compose services — leave them as-is.
+
+### 2. Start everything
 
 ```bash
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/kistbook
-REDIS_URL=redis://localhost:6379/0
-SECRET_KEY=your-secret-key-min-32-chars
-CREDENTIALS_ENC_KEY=<Fernet key — generate: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())">
-WETARSEEL_API_KEY=your-wetarseel-api-key
-WETARSEEL_WEBHOOK_SECRET=your-webhook-secret
-ENVIRONMENT=development
+docker compose up --build
 ```
 
-### 4. Run Migrations
+This starts five services in the right order:
+
+| Service | What it does |
+|---------|-------------|
+| `db` | PostgreSQL 15 |
+| `redis` | Redis 7 (Celery broker) |
+| `migrate` | Runs `alembic upgrade head`, then exits |
+| `api` | FastAPI on `localhost:8000` |
+| `worker` | Celery worker (processes reminder tasks) |
+| `beat` | Celery Beat (triggers daily scan at 06:00 UTC) |
+
+### 3. Generate a JWT token
+
+The API requires a bearer token on every request except the webhook endpoint.
 
 ```bash
-alembic upgrade head
-```
-
-### 5. Start Services
-
-```bash
-# Terminal 1 — FastAPI
-uvicorn kistbook.api.main:app --reload
-
-# Terminal 2 — Celery worker
-celery -A kistbook.celery_app worker --loglevel=info
-
-# Terminal 3 — Celery Beat (daily scheduler)
-celery -A kistbook.celery_app beat --loglevel=info
-```
-
-### 6. Generate a JWT Token
-
-```bash
-python -c "
+docker compose exec api python -c "
 from kistbook.core.security import create_access_token
 print(create_access_token({'sub': 'demo'}))
 "
 ```
 
-## First Run
+### 4. Open the demo UI
 
-### Option A — Web UI (easiest)
+Go to **http://localhost:8000** — a 4-step form walks through the full POC flow:
 
-Open `http://localhost:8000` in a browser. The demo UI walks through all 4 steps: create retailer → upload CSV → trigger scan → view logs.
+1. **Create Retailer** — registers ShopHive, saves the retailer ID
+2. **Upload CSV** — imports the installment book
+3. **Trigger Scan** — runs the reminder engine immediately
+4. **View Logs** — shows the full audit trail
 
-### Option B — Postman
+Paste the token from step 3 into the token field at the top.
 
-Import `postman/KistBook_POC.postman_collection.json`. See `postman/README.md` for instructions.
-
-### Option C — cURL
+### Stopping
 
 ```bash
-BASE=http://localhost:8000
-TOKEN=<your-jwt-token>
-
-# Create retailer
-curl -X POST $BASE/retailers \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"ShopHive","whatsapp_number":"+923001234567","manager_phone":"+923007654321"}'
-
-# Import CSV
-curl -X POST $BASE/retailers/<id>/import-csv \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "file=@installment_book.csv"
-
-# Trigger scan (dev only)
-curl -X POST $BASE/admin/trigger-scan \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"retailer_id":"<id>"}'
-
-# View logs
-curl $BASE/retailers/<id>/reminder-logs \
-  -H "Authorization: Bearer $TOKEN"
+docker compose down          # stop containers, keep DB data
+docker compose down -v       # stop + delete the DB volume (clean slate)
 ```
+
+---
+
+## CSV Format
+
+```
+customer_name,cnic,phone,guarantor_name,guarantor_phone,installment_amount,due_day_of_month,total_installments,installments_paid,last_payment_date
+Ahmed Khan,3520212345671,+923001234567,,,5000,15,12,3,2026-05-15
+```
+
+- `phone` / `guarantor_phone`: E.164 format (`+923xxxxxxxxx`)
+- `cnic`: 13 digits, no dashes
+- `due_day_of_month`: 1–28 (capped to last day of month for short months)
+- `last_payment_date`: `YYYY-MM-DD` or empty
+- `guarantor_name` / `guarantor_phone`: optional — leave empty if not on file
+
+---
 
 ## API Reference
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/retailers` | JWT | Create retailer + default config |
-| `POST` | `/retailers/{id}/import-csv` | JWT | Upload CSV installment book |
-| `GET` | `/retailers/{id}/customers` | JWT | List customers with filters |
-| `PATCH` | `/retailers/{id}/customers/{cid}` | JWT | Pause / resume sequence |
-| `GET` | `/retailers/{id}/reminder-logs` | JWT | Audit log with filters |
-| `GET` | `/retailers/{id}/config` | JWT | Get reminder config |
-| `PATCH` | `/retailers/{id}/config` | JWT | Update reminder config |
-| `POST` | `/webhooks/whatsapp` | HMAC | WeTarseel inbound webhook |
-| `POST` | `/admin/trigger-scan` | JWT | Manual scan (dev only) |
+All endpoints require `Authorization: Bearer <token>` except the webhook.
 
-## Running Tests
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/retailers` | Create retailer + default config |
+| `POST` | `/retailers/{id}/import-csv` | Upload CSV installment book |
+| `GET` | `/retailers/{id}/customers` | List customers (filters: `paused`, `completed`) |
+| `PATCH` | `/retailers/{id}/customers/{cid}` | Pause / resume sequence |
+| `GET` | `/retailers/{id}/reminder-logs` | Audit log (filters: `direction`, `status`, `from`, `to`) |
+| `GET` | `/retailers/{id}/config` | Get reminder config |
+| `PATCH` | `/retailers/{id}/config` | Update tone, VIP list, branch toggles |
+| `POST` | `/webhooks/whatsapp` | WeTarseel inbound webhook (HMAC verified, no JWT) |
+| `POST` | `/admin/trigger-scan` | Manual scan trigger (dev environment only) |
 
-```bash
-# Set test DB URL
-export TEST_DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/kistbook_test
+Interactive docs: **http://localhost:8000/docs**
 
-pytest kistbook/tests/ -v
-```
+A Postman collection is in `postman/` — see `postman/README.md` for import instructions.
 
-## Design Documents
-
-Full specification, data model, API contracts, and research decisions:
-
-```
-specs/001-reminder-engine-poc/
-├── spec.md          # Business specification, user stories, FRs
-├── plan.md          # Implementation plan, tech stack
-├── data-model.md    # Entity relationships, DB schema
-├── research.md      # Key design decisions with rationale
-└── contracts/api.md # REST endpoint contracts
-```
+---
 
 ## Branch Classification
 
-| Branch | Condition | Steps |
-|--------|-----------|-------|
-| A | Standard (days ≤ 3 or first overdue) | T−3, T0, T+1, T+3 |
-| B | Partial payer, overdue > 3 days | T+7, T+10, T+14 (manager) |
-| C | Never paid, overdue > 0 | T+3, T+5 (guarantor), T+7 (manager) |
+| Branch | When | Steps |
+|--------|------|-------|
+| A | Standard (0 days overdue or first 3 days) | T−3, T0, T+1, T+3 → customer |
+| B | Partial payer, > 3 days overdue | T+7, T+10 → customer; T+14 → manager |
+| C | Never paid, any days overdue | T+3 → customer; T+5 → guarantor; T+7 → manager |
+
+Customers who complete all installments are auto-marked `is_completed=TRUE` and excluded from all future scans.
+
+---
+
+## Running Tests
+
+Requires a running PostgreSQL instance (the Docker Compose `db` service works):
+
+```bash
+# With the db service already running via docker compose up db
+docker compose exec api pytest kistbook/tests/ -v
+```
+
+Or against a local Postgres:
+
+```bash
+TEST_DATABASE_URL=postgresql+asyncpg://kistbook:kistbook@localhost:5432/kistbook_test \
+  .venv/bin/pytest kistbook/tests/ -v
+```
